@@ -1,6 +1,9 @@
 import * as React from "react";
 import { FormEvent } from "react";
+//import axios, { AxiosResponse } from "axios";
 import axios from "axios";
+
+//const responseBody = (response: AxiosResponse) => response.data;
 
 class Home extends React.PureComponent {
   // Need to convert to typeScript
@@ -21,13 +24,16 @@ class Home extends React.PureComponent {
   // TODO make this async
   getRanking = () => {
     try {
-      const response = axios.get("https://localhost:44327/", {
-        params: {
-          search: this.state.searchString,
-          url: this.state.urlString
-        }
-      });
-      console.log(response);
+      axios
+        .get("https://localhost:5001/api/searchRating", {
+          params: {
+            searchString: this.state.searchString,
+            url: this.state.urlString
+          }
+        })
+        .then(responseBody => {
+          console.log(responseBody);
+        });
     } catch (error) {
       console.error(error);
     }
