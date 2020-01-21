@@ -3,6 +3,7 @@ using System.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace SEO_Automation
 {
@@ -17,9 +18,22 @@ namespace SEO_Automation
             this.url = url;
         }
 
-        public IDictionary<string, int> getRanking()
+        class JSONResult
         {
-            Console.WriteLine("Entered");
+            public string searchString;
+            public string url;
+            public List<int> ranking;
+
+            public JSONResult(string searchString, string url, List<int> ranking)
+            {
+                this.searchString = searchString;
+                this.url = url;
+                this.ranking = ranking;
+            }
+        }
+
+        public string getRanking()
+        {
             var options = new ChromeOptions();
             options.AddArguments("--disable-gpu");
 
@@ -27,11 +41,12 @@ namespace SEO_Automation
             chromeDriver.Navigate().GoToUrl("https://www.google.com");
 
             string[] words = keyword.Split(",");
-            var rankingDict = new Dictionary<string, int>();
+            var rankingList = new List<int>();
 
-            try
+
+            foreach (var word in words)
             {
-                foreach (var word in words)
+                try
                 {
                     // search by "q" name.
                     chromeDriver.FindElement(By.Name("q")).SendKeys(word);
@@ -48,21 +63,21 @@ namespace SEO_Automation
 
                     // Not Found case : 
                     ranking = (ranking == -1) ? 0 : ranking;
-                    rankingDict.Add(word, ranking);
+                    rankingList.Add(ranking);
 
                     //Clean text area to search for next element. 
                     chromeDriver.FindElementByXPath("//*[@id=\"tsf\"]/div[2]/div[1]/div[2]/div/div[2]/input").Clear();
+                }
+                catch (Exception e)
+                {
 
+                    Console.WriteLine("OOPS. BROKE MYSELF", e.Message);
                 }
             }
-            catch (Exception e)
-            {
 
-                Console.WriteLine("OOPS. BROKE MYSELF", e.Message);
-                Console.WriteLine(System.Environment.StackTrace);
-            }
-
-            return rankingDict;
+            chromeDriver.Close();
+            string jsonResult = JsonConvert.SerializeObject(new JSONResult(keyword, url, rankingList), Formatting.Indented);
+            return jsonResult;
         }
 
         bool GetLink(ref ChromeDriver chromeDriver, ref int ranking, ref List<string> listOfLinks)
@@ -94,12 +109,12 @@ namespace SEO_Automation
                 }
 
 
-                // Console.WriteLine("***********************");
-                // foreach (var item in listOfLinks)
-                // {
-                //     Console.WriteLine($"Item of unique link = {item}");
-                // }
-                // Console.WriteLine("***********************");
+                Console.WriteLine("***********************");
+                foreach (var item in listOfLinks)
+                {
+                    Console.WriteLine($"Item of unique link = {item}");
+                }
+                Console.WriteLine("***********************");
 
                 int distIndex = listOfLinks.FindIndex(link => link.Contains(url));
 
@@ -108,7 +123,8 @@ namespace SEO_Automation
                 ranking = distIndex;
                 if (distIndex != -1)
                 {
-                    //Found the ranking.
+                    //Found the ranking. Since FindIndex starts from 0 we need to increment by 1.
+                    ranking++;
                     Console.WriteLine("Found the URL at rank.", ranking);
                     return true;
                 }

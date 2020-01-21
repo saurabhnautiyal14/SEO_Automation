@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace SEO_Automation.Controllers
 {
@@ -37,15 +34,9 @@ namespace SEO_Automation.Controllers
             //Better to create service and inject to this controller
 
             var rating = new Rating(searchString, url);
-            var findRatingDict = rating.getRanking();
-            foreach (KeyValuePair<string, int> item in findRatingDict)
-            {
-                Console.WriteLine("Key: {0}, Value: {1}", item.Key, item.Value);
-            }
+            var result = rating.getRanking();
 
-            string json = JsonConvert.SerializeObject(findRatingDict, Formatting.Indented);
-
-            return new OkObjectResult(json);
+            return new OkObjectResult(result);
         }
 
 

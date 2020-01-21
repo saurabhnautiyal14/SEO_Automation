@@ -1,15 +1,24 @@
 import * as React from "react";
 import { FormEvent } from "react";
-//import axios, { AxiosResponse } from "axios";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
-//const responseBody = (response: AxiosResponse) => response.data;
+interface IResult {
+  searchString: string;
+  url: string;
+  ranking: [];
+}
+
+interface IState {
+  searchString: string;
+  urlString: string;
+  results: IResult[];
+}
 
 class Home extends React.PureComponent {
-  // Need to convert to typeScript
   state = {
     searchString: "",
-    urlString: ""
+    urlString: "",
+    results: []
   };
 
   // Fix the type as syntheticEvent
@@ -31,8 +40,11 @@ class Home extends React.PureComponent {
             url: this.state.urlString
           }
         })
-        .then(responseBody => {
-          console.log(responseBody);
+        .then(response => {
+          this.setState({
+            results: [...this.state.results, response.data]
+          });
+          console.log(response);
         });
     } catch (error) {
       console.error(error);
@@ -73,6 +85,19 @@ class Home extends React.PureComponent {
             GET RANKING
           </button>
         </form>
+
+        <div style={{ padding: "50px" }} />
+        <ul className="list-group">
+          {this.state.results.map((result: IResult, index) => {
+            return (
+              <li key={index} className="list-group-item">
+                The Ranking of {'"' + result.searchString + '"'} for URL{" "}
+                {'"' + result.url + '"'} is{" "}
+                {"[" + result.ranking.join(",") + "]"}
+              </li>
+            );
+          })}
+        </ul>
       </React.Fragment>
     );
   }
