@@ -1,6 +1,8 @@
 import * as React from "react";
 import { FormEvent } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 
 interface IResult {
   searchString: string;
@@ -8,17 +10,12 @@ interface IResult {
   ranking: [];
 }
 
-interface IState {
-  searchString: string;
-  urlString: string;
-  results: IResult[];
-}
-
 class Home extends React.PureComponent {
   state = {
     searchString: "",
     urlString: "",
-    results: []
+    results: [],
+    requestFailed: false
   };
 
   // Fix the type as syntheticEvent
@@ -37,6 +34,7 @@ class Home extends React.PureComponent {
   // TODO make this async
   getRanking = () => {
     try {
+      toast.info("Request sent to backend");
       axios
         .get("https://localhost:5001/api/searchRating", {
           params: {
@@ -45,12 +43,21 @@ class Home extends React.PureComponent {
           }
         })
         .then(response => {
-          this.setState({
-            results: [...this.state.results, response.data]
-          });
-          console.log(response);
+          if (response.status === 200) {
+            this.setState({
+              results: [...this.state.results, response.data]
+            });
+            this.setState({ requestFailed: false });
+            console.log(response);
+          } else {
+            toast.error("Server error - Make sure Backend server is running");
+            this.setState({ requestFailed: true });
+            console.log(response);
+          }
         });
     } catch (error) {
+      toast.error("Unexpected Error - Make sure Backend server is running");
+      this.setState({ requestFailed: true });
       console.error(error);
     }
   };
