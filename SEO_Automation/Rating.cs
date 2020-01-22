@@ -11,11 +11,23 @@ namespace SEO_Automation
     {
         private readonly string keyword;
         private readonly string url;
+        private ChromeDriver chromeDriver;
+        bool disposed = false;
 
         public Rating(string keyword, string url)
         {
             this.keyword = keyword;
             this.url = url;
+            Init("https://www.google.com");
+        }
+
+        public void Init(string searchWebsite)
+        {
+            var options = new ChromeOptions();
+            options.AddArguments("--disable-gpu");
+
+            chromeDriver = new ChromeDriver(options);
+            chromeDriver.Navigate().GoToUrl(searchWebsite);
         }
 
         class JSONResult
@@ -34,15 +46,9 @@ namespace SEO_Automation
 
         public string getRanking()
         {
-            var options = new ChromeOptions();
-            options.AddArguments("--disable-gpu");
-
-            var chromeDriver = new ChromeDriver(options);
-            chromeDriver.Navigate().GoToUrl("https://www.google.com");
 
             string[] words = keyword.Split(",");
             var rankingList = new List<int>();
-
 
             foreach (var word in words)
             {
@@ -57,7 +63,7 @@ namespace SEO_Automation
                     bool searchResult = false;
                     do
                     {
-                        searchResult = GetLink(ref chromeDriver, ref ranking, ref listOfLinks);
+                        searchResult = GetLink(ref ranking, ref listOfLinks);
                         chromeDriver.FindElementByXPath("//*[@id=\"pnnext\"]/span[2]").Click();
                     } while (!searchResult);
 
@@ -80,7 +86,7 @@ namespace SEO_Automation
             return jsonResult;
         }
 
-        bool GetLink(ref ChromeDriver chromeDriver, ref int ranking, ref List<string> listOfLinks)
+        bool GetLink(ref int ranking, ref List<string> listOfLinks)
         {
             try
             {

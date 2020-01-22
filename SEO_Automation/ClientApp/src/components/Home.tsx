@@ -1,6 +1,6 @@
 import * as React from "react";
 import { FormEvent } from "react";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
 interface IResult {
   searchString: string;
@@ -28,6 +28,10 @@ class Home extends React.PureComponent {
 
   inputURLChangeHandler = (event: FormEvent<HTMLInputElement>) => {
     this.setState({ urlString: event.currentTarget.value });
+  };
+
+  cleanSearchResult = () => {
+    this.setState({ results: [] });
   };
 
   // TODO make this async
@@ -77,12 +81,22 @@ class Home extends React.PureComponent {
           </div>
           <button
             type="button"
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary mr-3"
             onClick={() => {
               this.getRanking();
             }}
           >
             GET RANKING
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-success mr-3"
+            onClick={() => {
+              this.cleanSearchResult();
+            }}
+          >
+            CLEAN SEARCH RESULT
           </button>
         </form>
 
