@@ -12,7 +12,7 @@
 * Backend approach: An api is exposed with url as follows. 
 				 https://localhost:5001/api/searchRating
 				 Input Params : 1) searchString (comma separated string to search) 
-								2) url : The url which matches the search result based on ranking. 
+					        2) url : The url which matches the search result based on ranking. 
 								
 Using the selenium chrome driver an instance is launched and text is searched. Screen scraping help to capture all the links and form a list of unique links (URL) based on the search.
 The process continues until part/full url is matched or we have reached top 100 unique results. 
