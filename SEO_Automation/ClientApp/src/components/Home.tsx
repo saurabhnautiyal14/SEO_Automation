@@ -2,7 +2,6 @@ import * as React from "react";
 import { FormEvent } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
 
 interface IResult {
   searchString: string;

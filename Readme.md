@@ -5,7 +5,7 @@
 
 ##DESING APPROACH: 
 ===================
-- The project is built using .NET CORE 3.1 and React 16.11.0.
+- The project is built using .NET CORE 3.1 and React 16.11.0 (Typescript)
 - Since requirement says that we can't use any 3rd party lib and Google API search, the method adopted here is via a testing tool Selenium (third party testing tool) 
 
 Backend approch: An api is exposed with url as follows. 
