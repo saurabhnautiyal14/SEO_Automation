@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace SEO_Automation.Controllers
@@ -17,7 +18,7 @@ namespace SEO_Automation.Controllers
 
         //https://localhost:44324/api/searchRating?searchString=iron&url=www.google.com
         [HttpGet]
-        public ActionResult Get(string searchString, string url)
+        public async Task<ActionResult> GetAsync(string searchString, string url)
         {
             if (string.IsNullOrWhiteSpace(searchString))
             {
@@ -34,7 +35,7 @@ namespace SEO_Automation.Controllers
             //Better to create service and inject to this controller
 
             var rating = new Rating(searchString, url);
-            var result = rating.getRanking();
+            var result = await rating.getRanking();
 
             return new OkObjectResult(result);
         }

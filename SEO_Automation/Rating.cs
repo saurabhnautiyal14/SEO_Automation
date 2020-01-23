@@ -4,6 +4,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace SEO_Automation
 {
@@ -44,46 +45,49 @@ namespace SEO_Automation
             }
         }
 
-        public string getRanking()
+        public Task<string> getRanking()
         {
 
-            string[] words = keyword.Split(",");
-            var rankingList = new List<int>();
-
-            foreach (var word in words)
+            return Task.Run(() =>
             {
-                try
-                {
-                    // search by "q" name.
-                    chromeDriver.FindElement(By.Name("q")).SendKeys(word);
-                    chromeDriver.FindElement(By.Name("q")).SendKeys(OpenQA.Selenium.Keys.Enter);
+                string[] words = keyword.Split(",");
+                var rankingList = new List<int>();
 
-                    int ranking = 1;
-                    var listOfLinks = new List<string>();
-                    bool searchResult = false;
-                    do
+                foreach (var word in words)
+                {
+                    try
                     {
-                        searchResult = GetLink(ref ranking, ref listOfLinks);
-                        chromeDriver.FindElementByXPath("//*[@id=\"pnnext\"]/span[2]").Click();
-                    } while (!searchResult);
+                        // search by "q" name.
+                        chromeDriver.FindElement(By.Name("q")).SendKeys(word);
+                        chromeDriver.FindElement(By.Name("q")).SendKeys(OpenQA.Selenium.Keys.Enter);
 
-                    // Not Found case : 
-                    ranking = (ranking == -1) ? 0 : ranking;
-                    rankingList.Add(ranking);
+                        int ranking = 1;
+                        var listOfLinks = new List<string>();
+                        bool searchResult = false;
+                        do
+                        {
+                            searchResult = GetLink(ref ranking, ref listOfLinks);
+                            chromeDriver.FindElementByXPath("//*[@id=\"pnnext\"]/span[2]").Click();
+                        } while (!searchResult);
 
-                    //Clean text area to search for next element. 
-                    chromeDriver.FindElementByXPath("//*[@id=\"tsf\"]/div[2]/div[1]/div[2]/div/div[2]/input").Clear();
+                        // Not Found case : 
+                        ranking = (ranking == -1) ? 0 : ranking;
+                        rankingList.Add(ranking);
+
+                        //Clean text area to search for next element. 
+                        chromeDriver.FindElementByXPath("//*[@id=\"tsf\"]/div[2]/div[1]/div[2]/div/div[2]/input").Clear();
+                    }
+                    catch (Exception e)
+                    {
+
+                        Console.WriteLine("OOPS. BROKE MYSELF", e.Message);
+                    }
                 }
-                catch (Exception e)
-                {
 
-                    Console.WriteLine("OOPS. BROKE MYSELF", e.Message);
-                }
-            }
-
-            chromeDriver.Close();
-            string jsonResult = JsonConvert.SerializeObject(new JSONResult(keyword, url, rankingList), Formatting.Indented);
-            return jsonResult;
+                chromeDriver.Close();
+                string jsonResult = JsonConvert.SerializeObject(new JSONResult(keyword, url, rankingList), Formatting.Indented);
+                return jsonResult;
+            });
         }
 
         bool GetLink(ref int ranking, ref List<string> listOfLinks)
