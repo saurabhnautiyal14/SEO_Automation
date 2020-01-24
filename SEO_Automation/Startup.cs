@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace SEO_Automation
 {
@@ -24,7 +25,7 @@ namespace SEO_Automation
 
             services.AddCors(opt => opt.AddPolicy("CorsPolicy", policy =>
             {
-                policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000");
+                policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:44327");
             }));
 
             services.AddControllersWithViews();
@@ -68,6 +69,7 @@ namespace SEO_Automation
 
                 if (env.IsDevelopment())
                 {
+                    spa.Options.StartupTimeout = TimeSpan.FromSeconds(1200);
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
