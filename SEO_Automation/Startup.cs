@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using SEO_Automation.Service;
 
 namespace SEO_Automation
 {
@@ -22,7 +23,7 @@ namespace SEO_Automation
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddTransient<IRatingService, RatingService>();
             services.AddCors(opt => opt.AddPolicy("CorsPolicy", policy =>
             {
                 policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:44327");

@@ -1,25 +1,21 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using System.Threading.Tasks;
+using SEO_Automation.Model;
 
-namespace SEO_Automation
+namespace SEO_Automation.Service
 {
-    public class Rating
+    public class RatingService : IRatingService
     {
-        private readonly string keyword;
-        private readonly string url;
-        private ChromeDriver chromeDriver;
-        bool disposed = false;
+        private ChromeDriver _chromeDriver;
+        private const string HttpsWwwGoogleCom = "https://www.google.com";
 
-        public Rating(string keyword, string url)
+        public RatingService()
         {
-            this.keyword = keyword;
-            this.url = url;
-            Init("https://www.google.com");
+            Init(HttpsWwwGoogleCom);
         }
 
         public void Init(string searchWebsite)
@@ -27,28 +23,15 @@ namespace SEO_Automation
             var options = new ChromeOptions();
             options.AddArguments("--disable-gpu");
 
-            chromeDriver = new ChromeDriver(options);
-            chromeDriver.Navigate().GoToUrl(searchWebsite);
+            _chromeDriver = new ChromeDriver(options);
+            _chromeDriver.Navigate().GoToUrl(searchWebsite);
         }
 
-        class JSONResult
+
+
+        public Task<string> GetRanking(string keyword, string url)
         {
-            public string searchString;
-            public string url;
-            public List<int> ranking;
-
-            public JSONResult(string searchString, string url, List<int> ranking)
-            {
-                this.searchString = searchString;
-                this.url = url;
-                this.ranking = ranking;
-            }
-        }
-
-        public Task<string> getRanking()
-        {
-
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 string[] words = keyword.Split(",");
                 var rankingList = new List<int>();
@@ -58,16 +41,15 @@ namespace SEO_Automation
                     try
                     {
                         // search by "q" name.
-                        chromeDriver.FindElement(By.Name("q")).SendKeys(word);
-                        chromeDriver.FindElement(By.Name("q")).SendKeys(OpenQA.Selenium.Keys.Enter);
+                        _chromeDriver.FindElement(By.Name("q")).SendKeys(word);
+                        _chromeDriver.FindElement(By.Name("q")).SendKeys(Keys.Enter);
 
                         int ranking = 1;
-                        var listOfLinks = new List<string>();
-                        bool searchResult = false;
+                        bool searchResult;
                         do
                         {
-                            searchResult = GetLink(ref ranking, ref listOfLinks);
-                            chromeDriver.FindElementByXPath("//*[@id=\"pnnext\"]/span[2]").Click();
+                            searchResult = GetLink(ref ranking, url);
+                            _chromeDriver.FindElementByXPath("//*[@id=\"pnnext\"]/span[2]").Click();
                         } while (!searchResult);
 
                         // Not Found case : 
@@ -75,28 +57,34 @@ namespace SEO_Automation
                         rankingList.Add(ranking);
 
                         //Clean text area to search for next element. 
-                        chromeDriver.FindElementByXPath("//*[@id=\"tsf\"]/div[2]/div[1]/div[2]/div/div[2]/input").Clear();
+                        _chromeDriver.FindElementByXPath("//*[@id=\"tsf\"]/div[2]/div[1]/div[2]/div/div[2]/input").Clear();
                     }
                     catch (Exception e)
                     {
-
-                        Console.WriteLine("OOPS. BROKE MYSELF", e.Message);
+                        Console.WriteLine($"OOPS. BROKE MYSELF { e.Message}");
+                        throw;
                     }
                 }
 
-                chromeDriver.Close();
-                string jsonResult = JsonConvert.SerializeObject(new JSONResult(keyword, url, rankingList), Formatting.Indented);
+                _chromeDriver.Close();
+                string jsonResult = JsonConvert.SerializeObject(new JsonResult(keyword,
+                    url,
+                    rankingList),
+                    Formatting.Indented);
+
                 return jsonResult;
             });
         }
 
-        bool GetLink(ref int ranking, ref List<string> listOfLinks)
+        private bool GetLink(ref int ranking, string url)
         {
             try
             {
-                var searchSites = chromeDriver.FindElements(By.ClassName("TbwUpd"));
+                List<string> listOfLinks = new List<string>();
+                var searchSites = _chromeDriver.FindElements(By.ClassName("TbwUpd"));
                 foreach (var site in searchSites)
                 {
+
                     try
                     {
                         if (ranking >= 100)
@@ -105,11 +93,13 @@ namespace SEO_Automation
                             Console.WriteLine("Top 100 elements selected.");
                             return true;
                         }
+
                         var alt = site.FindElement(By.TagName("img")).GetAttribute("alt");
                         if (listOfLinks.Exists(x => string.Equals(x, alt)))
                         {
                             continue;
                         }
+
                         listOfLinks.Add(alt);
                     }
                     catch (Exception e)
@@ -135,7 +125,7 @@ namespace SEO_Automation
                 {
                     //Found the ranking. Since FindIndex starts from 0 we need to increment by 1.
                     ranking++;
-                    Console.WriteLine("Found the URL at rank.", ranking);
+                    Console.WriteLine($"Found the URL at rank.  {ranking}");
                     return true;
                 }
                 else
@@ -150,5 +140,4 @@ namespace SEO_Automation
             return false;
         }
     }
-
 }

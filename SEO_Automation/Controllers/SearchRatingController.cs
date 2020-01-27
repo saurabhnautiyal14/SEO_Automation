@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using SEO_Automation.Service;
 
 namespace SEO_Automation.Controllers
 {
@@ -8,38 +8,49 @@ namespace SEO_Automation.Controllers
     [Route("api/[controller]")]
     public class SearchRatingController : ControllerBase
     {
+        private readonly IRatingService _ratingService;
 
-        private readonly ILogger<SearchRatingController> _logger;
-
-        public SearchRatingController(ILogger<SearchRatingController> logger)
+        public SearchRatingController(IRatingService ratingService)
         {
-            _logger = logger;
+            _ratingService = ratingService;
         }
 
         //https://localhost:44324/api/searchRating?searchString=iron&url=www.google.com
         [HttpGet]
         public async Task<ActionResult> GetAsync(string searchString, string url)
         {
-            if (string.IsNullOrWhiteSpace(searchString))
+            if (ValidateArgs(searchString, url, out var badRequest))
             {
-                return BadRequest("Search String can not be null");
-            }
-
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                return BadRequest("URL String can not be null");
+                return badRequest;
             }
 
 
-            //Perform your operation here
-            //Better to create service and inject to this controller
-
-            var rating = new Rating(searchString, url);
-            var result = await rating.getRanking();
+            string result = await _ratingService.GetRanking(searchString, url);
 
             return new OkObjectResult(result);
         }
 
+        private bool ValidateArgs(string searchString, string url, out ActionResult badRequest)
+        {
+            badRequest = null;
+            if (string.IsNullOrWhiteSpace(searchString))
+            {
+                {
+                    badRequest = BadRequest("Search String can not be null");
+                    return true;
+                }
+            }
 
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                {
+                    badRequest = BadRequest("URL String can not be null");
+                    return true;
+                }
+            }
+
+
+            return false;
+        }
     }
 }
